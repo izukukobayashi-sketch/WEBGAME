@@ -3,6 +3,7 @@ import { create } from 'zustand'
 export type TabId =
   | 'idle'
   | 'world'
+  | 'map'
   | 'characters'
   | 'relationships'
   | 'plot'
@@ -17,6 +18,7 @@ export type TabId =
 export const TABS: { id: TabId; label: string }[] = [
   { id: 'idle', label: '▶ Авто' },
   { id: 'world', label: 'Мир' },
+  { id: 'map', label: '🗺 Карта' },
   { id: 'characters', label: 'Персонажи' },
   { id: 'relationships', label: 'Отношения' },
   { id: 'plot', label: 'Сюжет' },

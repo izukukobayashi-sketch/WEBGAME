@@ -7,6 +7,7 @@ import { useSimulationStore } from '@/store/simulationStore'
 
 import { IdleTab } from '@/components/tabs/IdleTab'
 import { WorldTab } from '@/components/tabs/WorldTab'
+import { MapTab } from '@/components/tabs/MapTab'
 import { CharactersTab } from '@/components/tabs/CharactersTab'
 import { RelationshipsTab } from '@/components/tabs/RelationshipsTab'
 import { PlotTab } from '@/components/tabs/PlotTab'
@@ -21,6 +22,7 @@ import { SettingsTab } from '@/components/tabs/SettingsTab'
 const TAB_COMPONENTS = {
   idle: IdleTab,
   world: WorldTab,
+  map: MapTab,
   characters: CharactersTab,
   relationships: RelationshipsTab,
   plot: PlotTab,
@@ -33,8 +35,8 @@ const TAB_COMPONENTS = {
   settings: SettingsTab,
 } as const
 
-// IdleTab needs full height (no overflow-y-auto on main)
-const FULL_HEIGHT_TABS = new Set(['idle'])
+// These tabs need full height (no overflow-y-auto on main)
+const FULL_HEIGHT_TABS = new Set(['idle', 'map'])
 
 export default function App() {
   const activeTab = useUIStore((s) => s.activeTab)
