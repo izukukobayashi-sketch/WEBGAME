@@ -6,6 +6,7 @@ import {
 } from '../procedural/pools/index'
 import type { BreakdownSeverity } from './MoodSystem'
 import { satisfyNeed } from './NeedsSystem'
+import { contextManager, type LLMProvider } from '../ai'
 
 export interface SimEvent {
   id: string
@@ -31,12 +32,13 @@ const CTX_MAP = {
 } as const
 
 /** Generate procedural events for one character on a given tick. */
-export function generateCharacterEvents(
+export async function generateCharacterEvents(
   character: Character,
   world: World,
   hoursElapsed: number,
   breakdown: BreakdownSeverity,
-): { events: SimEvent[]; updatedCharacter: Character } {
+  aiProvider?: LLMProvider,
+): Promise<{ events: SimEvent[]; updatedCharacter: Character }> {
   const events: SimEvent[] = []
   let char = character
   const ctx = {
@@ -47,9 +49,22 @@ export function generateCharacterEvents(
     indoor: true,
   }
 
-  // ── Breakdown event ──────────────────────────────────────────────────────
-  if (breakdown !== 'none') {
-    const text = pickMoodBreakdownText(ctx) + ' ' + pickMoodRecoveryText()
+  // ── Breakdown event (with AI enhancement for extreme) ───────────────────
+  if (breakdown !== 'none' as BreakdownSeverity) {
+    let text = pickMoodBreakdownText(ctx) + ' ' + pickMoodRecoveryText()
+
+    // AI enhancement for extreme breakdown
+    if (breakdown === 'extreme' && aiProvider) {
+      const ctxPkg = contextManager.buildCharacterContext(char, world, 'Крайний психологический срыв')
+      const msgs = contextManager.toMessages(ctxPkg)
+      try {
+        const aiResp = await aiProvider.complete(msgs)
+        text = aiResp.text
+      } catch {
+        // Fall back to procedural on error
+      }
+    }
+
     events.push(newEvent({
       worldDate: world.timeline.currentDate,
       characterId: char.id,

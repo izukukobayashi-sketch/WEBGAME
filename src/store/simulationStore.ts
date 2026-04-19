@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Character, World } from '@/types'
 import { processTick, type SimSpeed, type SimEvent } from '@/engine/simulation'
 import { saveWorld, saveCharacter } from '@/db'
+import type { LLMProvider } from '@/engine/ai'
 
 const TICK_INTERVAL_MS = 500
 const MAX_LOG = 200
@@ -16,14 +17,16 @@ export interface SimulationState {
   totalTicks: number
   ticksSinceLastSave: number
   _intervalId: ReturnType<typeof setInterval> | null
+  aiProvider: LLMProvider | null
 
   // Actions
   init: (world: World, characters: Character[]) => void
   start: () => void
   pause: () => void
   setSpeed: (speed: SimSpeed) => void
-  step: () => void            // one manual tick
+  step: () => Promise<void>     // one manual tick
   reset: () => void
+  setAiProvider: (provider: LLMProvider | null) => void
 }
 
 export const useSimulationStore = create<SimulationState>((set, get) => ({
@@ -35,6 +38,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
   totalTicks: 0,
   ticksSinceLastSave: 0,
   _intervalId: null,
+  aiProvider: null,
 
   init: (world, characters) => {
     const { _intervalId } = get()
@@ -47,28 +51,28 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     if (!get().world) return
 
     const id = setInterval(() => {
-      const { world, characters, speed, eventLog, totalTicks, ticksSinceLastSave } = get()
+      const { world, characters, speed, eventLog, totalTicks, ticksSinceLastSave, aiProvider } = get()
       if (!world) return
 
-      const result = processTick(world, characters, speed)
+      void processTick(world, characters, speed, aiProvider || undefined).then((result) => {
+        const newLog = [...result.events, ...eventLog].slice(0, MAX_LOG)
+        const newSinceLastSave = ticksSinceLastSave + 1
 
-      const newLog = [...result.events, ...eventLog].slice(0, MAX_LOG)
-      const newSinceLastSave = ticksSinceLastSave + 1
+        set({
+          world: result.updatedWorld,
+          characters: result.updatedCharacters,
+          eventLog: newLog,
+          totalTicks: totalTicks + 1,
+          ticksSinceLastSave: newSinceLastSave,
+        })
 
-      set({
-        world: result.updatedWorld,
-        characters: result.updatedCharacters,
-        eventLog: newLog,
-        totalTicks: totalTicks + 1,
-        ticksSinceLastSave: newSinceLastSave,
+        // Autosave to IndexedDB
+        if (newSinceLastSave >= AUTOSAVE_EVERY) {
+          set({ ticksSinceLastSave: 0 })
+          void saveWorld(result.updatedWorld)
+          for (const c of result.updatedCharacters) void saveCharacter(c)
+        }
       })
-
-      // Autosave to IndexedDB
-      if (newSinceLastSave >= AUTOSAVE_EVERY) {
-        set({ ticksSinceLastSave: 0 })
-        void saveWorld(result.updatedWorld)
-        for (const c of result.updatedCharacters) void saveCharacter(c)
-      }
     }, TICK_INTERVAL_MS)
 
     set({ isRunning: true, _intervalId: id })
@@ -94,10 +98,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     }
   },
 
-  step: () => {
-    const { world, characters, speed, eventLog, totalTicks } = get()
+  step: async () => {
+    const { world, characters, speed, eventLog, totalTicks, aiProvider } = get()
     if (!world) return
-    const result = processTick(world, characters, speed)
+    const result = await processTick(world, characters, speed, aiProvider || undefined)
     set({
       world: result.updatedWorld,
       characters: result.updatedCharacters,
@@ -110,5 +114,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     const { _intervalId } = get()
     if (_intervalId) clearInterval(_intervalId)
     set({ isRunning: false, _intervalId: null, world: null, characters: [], eventLog: [], totalTicks: 0 })
+  },
+
+  setAiProvider: (provider) => {
+    set({ aiProvider: provider })
   },
 }))

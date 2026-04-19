@@ -3,6 +3,7 @@ import { tickNeeds } from './NeedsSystem'
 import { tickMood } from './MoodSystem'
 import { generateCharacterEvents, generateWorldEvents, type SimEvent } from './EventSystem'
 import { addHours } from '../procedural/MorphologyHelper'
+import type { LLMProvider } from '../ai'
 
 export type SimSpeed = 1 | 5 | 10 | 50
 
@@ -21,11 +22,12 @@ export interface TickResult {
 }
 
 /** Process one simulation tick for the given world + characters. */
-export function processTick(
+export async function processTick(
   world: World,
   characters: Character[],
   speed: SimSpeed,
-): TickResult {
+  aiProvider?: LLMProvider,
+): Promise<TickResult> {
   const hoursElapsed = HOURS_PER_TICK[speed]
   const newDate = addHours(world.timeline.currentDate, hoursElapsed)
 
@@ -51,7 +53,7 @@ export function processTick(
     current = moodResult.character
 
     // 3. Events
-    const evResult = generateCharacterEvents(current, updatedWorld, hoursElapsed, moodResult.breakdown)
+    const evResult = await generateCharacterEvents(current, updatedWorld, hoursElapsed, moodResult.breakdown, aiProvider)
     current = evResult.updatedCharacter
     allEvents.push(...evResult.events)
 
