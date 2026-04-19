@@ -134,6 +134,18 @@ export interface Goal {
   progress: number // 0-100
 }
 
+export type ItemCategory = 'money' | 'object' | 'document' | 'weapon' | 'clothing' | 'relic' | 'digital' | 'other'
+
+export interface Item {
+  id: string
+  name: string
+  category: ItemCategory
+  quantity: number
+  description: string
+  value: number      // currency units
+  isKeyItem: boolean
+}
+
 export interface GrammarProfile {
   gender: Gender
   nameGenitive: string
@@ -197,6 +209,9 @@ export interface Character {
   schedule: Schedule
   activeGoals: Goal[]
   currentActivity: string
+
+  // Inventory
+  items: Item[]
 
   // Meta
   role: CharacterRole
@@ -286,6 +301,7 @@ export function createDefaultCharacter(worldId: string, partial?: Partial<Charac
     schedule: { wakeTime: '07:00', sleepTime: '23:00', dailyRoutine: '' },
     activeGoals: [],
     currentActivity: '',
+    items: [],
     role: 'majorNPC',
     simulationLevel: 'warm',
     hasSystem: false,
