@@ -1,5 +1,5 @@
 import type { LLMProvider } from './LLMProvider'
-import type { World, Character } from '@/types'
+import type { World, Character, MemoryEvent } from '@/types'
 
 export interface NarrativeEvent {
   icon: string
@@ -59,6 +59,31 @@ export async function generateJournalEntry(
 ${eventLines || '— тихий день, ничего особенного.'}
 
 Напиши короткую дневниковую запись (2–3 абзаца) на русском, от первого лица, искреннюю и эмоциональную. Отрази внутреннее состояние ${character.name}.`
+
+  const response = await provider.complete([{ role: 'user', content: prompt }])
+  return response.text
+}
+
+/** Generate a philosophical reflection summarising hot memories into warm. */
+export async function generateReflection(
+  character: Character,
+  hotMemories: MemoryEvent[],
+  world: World,
+  provider: LLMProvider,
+): Promise<string> {
+  const lines = hotMemories
+    .slice(-12)
+    .map((m) => `- ${m.description}`)
+    .join('\n')
+
+  const prompt = `Ты пишешь внутренний монолог-рефлексию от имени ${character.name}.
+Дата: ${world.timeline.currentDate}.
+Настроение: ${character.mood}/100.
+
+Недавние воспоминания:
+${lines || '— пустая страница.'}
+
+Напиши короткую философскую рефлексию (1–2 абзаца) от первого лица: что ${character.name} понял о себе, мире и происходящем. Без пафоса, искренне, с характером персонажа.`
 
   const response = await provider.complete([{ role: 'user', content: prompt }])
   return response.text

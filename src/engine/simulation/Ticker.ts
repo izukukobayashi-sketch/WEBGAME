@@ -2,6 +2,7 @@ import type { Character, World } from '@/types'
 import { tickNeeds } from './NeedsSystem'
 import { tickMood } from './MoodSystem'
 import { generateCharacterEvents, generateWorldEvents, type SimEvent } from './EventSystem'
+import { updateMemory } from './MemorySystem'
 import { addHours } from '../procedural/MorphologyHelper'
 import type { LLMProvider } from '../ai'
 
@@ -56,6 +57,9 @@ export async function processTick(
     const evResult = await generateCharacterEvents(current, updatedWorld, hoursElapsed, moodResult.breakdown, aiProvider)
     current = evResult.updatedCharacter
     allEvents.push(...evResult.events)
+
+    // 4. Memory
+    current = updateMemory(current, evResult.events)
 
     updatedCharacters.push(current)
   }
