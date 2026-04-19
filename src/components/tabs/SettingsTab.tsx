@@ -88,7 +88,7 @@ export function SettingsTab() {
       {/* About */}
       <div className="card">
         <div className="font-medium mb-1">AI Life Simulator</div>
-        <div className="text-xs text-gray-500">Этап 0–1 реализован · Данные: IndexedDB · Движок: чистый TypeScript</div>
+        <div className="text-xs text-gray-500">Этапы 0–6 реализованы · Данные: IndexedDB · Движок: TypeScript + Claude AI</div>
       </div>
     </div>
   )

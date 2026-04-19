@@ -3,6 +3,7 @@ import { useWorldStore } from '@/store/worldStore'
 import { useSimulationStore } from '@/store/simulationStore'
 import { getMoodLabel, getMoodColor } from '@/engine/simulation/MoodSystem'
 import { formatDate } from '@/engine/procedural/MorphologyHelper'
+import { ClaudeProvider } from '@/engine/ai'
 import type { SimSpeed } from '@/engine/simulation/Ticker'
 import type { SimEvent } from '@/engine/simulation/EventSystem'
 import type { Character } from '@/types'
@@ -25,6 +26,9 @@ export function IdleTab() {
   useEffect(() => {
     if (storeWorld && !simWorld) {
       sim.init(storeWorld, storeChars)
+      if (storeWorld.settings.aiProvider === 'claude' && storeWorld.settings.aiApiKey) {
+        sim.setAiProvider(new ClaudeProvider(storeWorld.settings.aiApiKey))
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeWorld, simWorld])
