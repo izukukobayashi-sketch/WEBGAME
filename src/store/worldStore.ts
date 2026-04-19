@@ -43,7 +43,7 @@ export interface WorldState {
   deleteRelationship: (relId: string) => Promise<void>
 }
 
-export const useWorldStore = create<WorldState>((set, get) => ({
+export const useWorldStore = create<WorldState>((set) => ({
   activeWorldId: null,
   world: null,
   characters: [],
@@ -168,6 +168,4 @@ export const useWorldStore = create<WorldState>((set, get) => ({
     set((s) => ({ relationships: s.relationships.filter((r) => r.id !== relId) }))
   },
 
-  // suppress unused get warning
-  _get: get,
 }))

@@ -3,7 +3,9 @@ import { TabBar } from '@/components/TabBar'
 import { Notification } from '@/components/Notification'
 import { useUIStore } from '@/store/uiStore'
 import { useWorldStore } from '@/store/worldStore'
+import { useSimulationStore } from '@/store/simulationStore'
 
+import { IdleTab } from '@/components/tabs/IdleTab'
 import { WorldTab } from '@/components/tabs/WorldTab'
 import { CharactersTab } from '@/components/tabs/CharactersTab'
 import { RelationshipsTab } from '@/components/tabs/RelationshipsTab'
@@ -17,6 +19,7 @@ import { MemoryTab } from '@/components/tabs/MemoryTab'
 import { SettingsTab } from '@/components/tabs/SettingsTab'
 
 const TAB_COMPONENTS = {
+  idle: IdleTab,
   world: WorldTab,
   characters: CharactersTab,
   relationships: RelationshipsTab,
@@ -30,30 +33,37 @@ const TAB_COMPONENTS = {
   settings: SettingsTab,
 } as const
 
+// IdleTab needs full height (no overflow-y-auto on main)
+const FULL_HEIGHT_TABS = new Set(['idle'])
+
 export default function App() {
   const activeTab = useUIStore((s) => s.activeTab)
   const loadWorldList = useWorldStore((s) => s.loadWorldList)
 
-  // Preload world list on startup
   useEffect(() => {
     loadWorldList()
   }, [loadWorldList])
 
+  // Pause simulation when user navigates away from idle tab
+  const pause = useSimulationStore((s) => s.pause)
+  const isRunning = useSimulationStore((s) => s.isRunning)
+  useEffect(() => {
+    if (activeTab !== 'idle' && isRunning) pause()
+  }, [activeTab, isRunning, pause])
+
   const TabComponent = TAB_COMPONENTS[activeTab]
+  const fullHeight = FULL_HEIGHT_TABS.has(activeTab)
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-surface">
-      {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-gray-800 shrink-0">
         <span className="text-sm font-semibold tracking-wide text-gray-300">AI Life Simulator</span>
         <ActiveWorldBadge />
       </header>
 
-      {/* Tabs */}
       <TabBar />
 
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className={`flex-1 ${fullHeight ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
         <TabComponent />
       </main>
 
@@ -64,13 +74,16 @@ export default function App() {
 
 function ActiveWorldBadge() {
   const world = useWorldStore((s) => s.world)
-  if (!world) return null
+  const simWorld = useSimulationStore((s) => s.world)
+  const isRunning = useSimulationStore((s) => s.isRunning)
+  const displayWorld = simWorld ?? world
+  if (!displayWorld) return null
   return (
     <div className="flex items-center gap-2 text-xs text-gray-400">
-      <span className="w-2 h-2 rounded-full bg-green-500" />
-      <span>{world.name}</span>
+      <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-400 animate-pulse' : 'bg-green-600'}`} />
+      <span>{displayWorld.name}</span>
       <span className="text-gray-600">·</span>
-      <span>{world.timeline.currentDate}</span>
+      <span>{displayWorld.timeline.currentDate}</span>
     </div>
   )
 }
