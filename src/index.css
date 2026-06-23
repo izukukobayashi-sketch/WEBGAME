@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply h-full;
+  }
+  body {
+    @apply bg-surface text-gray-100 font-sans;
+  }
+  * {
+    @apply box-border;
+  }
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded text-sm font-medium transition-colors cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-accent hover:bg-red-500 text-white;
+  }
+  .btn-secondary {
+    @apply btn bg-surface-overlay hover:bg-gray-600 text-gray-200;
+  }
+  .btn-ghost {
+    @apply btn hover:bg-surface-overlay text-gray-300;
+  }
+  .btn-danger {
+    @apply btn bg-red-800 hover:bg-red-700 text-white;
+  }
+  .input {
+    @apply w-full bg-surface-raised border border-gray-700 rounded px-3 py-2 text-sm text-gray-100
+           placeholder-gray-500 focus:outline-none focus:border-accent transition-colors;
+  }
+  .textarea {
+    @apply input resize-y min-h-[80px];
+  }
+  .select {
+    @apply input appearance-none cursor-pointer;
+  }
+  .label {
+    @apply block text-xs text-gray-400 mb-1 uppercase tracking-wide;
+  }
+  .card {
+    @apply bg-surface-raised rounded-lg p-4 border border-gray-800;
+  }
+  .field {
+    @apply mb-4;
+  }
+  .section-title {
+    @apply text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 mt-6;
+  }
+  .stat-bar {
+    @apply h-2 rounded-full bg-gray-700 overflow-hidden;
+  }
+  .stat-bar-fill {
+    @apply h-full rounded-full transition-all;
+  }
+  .tag {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-surface-overlay text-gray-300;
+  }
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50;
+  }
+  .modal-panel {
+    @apply bg-surface-raised rounded-xl border border-gray-700 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
+  }
+}
